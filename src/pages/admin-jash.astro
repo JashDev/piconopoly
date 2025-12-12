@@ -1,0 +1,34 @@
+---
+import SuperAdminPage from "../components/SuperAdminPage";
+import "../styles/global.css";
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PICONOPOLY - Super Admin" />
+    <title>Super Admin - PICONOPOLY</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      // Script para aplicar tema antes de que React se monte
+      (function() {
+        if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+          const savedTheme = sessionStorage.getItem("theme");
+          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const shouldBeDark = savedTheme === "dark" || (!savedTheme && prefersDark);
+          if (shouldBeDark) {
+            document.documentElement.classList.add("dark-mode");
+          } else {
+            document.documentElement.classList.add("light-mode");
+          }
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <SuperAdminPage client:only="react" />
+  </body>
+</html>
+

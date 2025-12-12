@@ -10,6 +10,7 @@ import PlayerList from "./PlayerList";
 import RegisterForm from "./RegisterForm";
 import RoomSelector from "./RoomSelector";
 import TransactionModal from "./TransactionModal";
+import TourGuide from "./TourGuide";
 import { getRoom } from "../lib/firebase";
 
 export default function MonopolyApp() {
@@ -24,6 +25,65 @@ export default function MonopolyApp() {
   const [loading, setLoading] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<{ id: string | "BANK"; name: string } | null>(null);
+
+  const gameTourSteps = [
+    {
+      id: "balance",
+      target: ".player-balance-display",
+      title: "Tu Balance",
+      content: "Aquí puedes ver tu saldo actual en tiempo real. Se actualiza automáticamente cuando recibes o envías dinero.",
+      position: "bottom" as const,
+    },
+    {
+      id: "bank-button",
+      target: ".bank-pass-card",
+      title: "Cobrar del Banco",
+      content: "Haz clic aquí para cobrar dinero directamente del banco. El banco tiene dinero infinito, así que puedes cobrar cualquier cantidad.",
+      position: "bottom" as const,
+    },
+    {
+      id: "free-parking-button",
+      target: ".free-parking-card-button",
+      title: "Cobrar de Parada Libre",
+      content: "Este botón te permite cobrar el dinero acumulado en Parada Libre. Solo puedes cobrar si hay saldo disponible.",
+      position: "bottom" as const,
+    },
+    {
+      id: "player-list",
+      target: ".player-list",
+      title: "Lista de Jugadores",
+      content: "Aquí puedes ver todos los jugadores y el banco. Los colores del borde indican el estado de su saldo: verde=OK, amarillo=warning, rojo=alert.",
+      position: "top" as const,
+    },
+    {
+      id: "how-to-pay",
+      target: ".player-list",
+      title: "Cómo Hacer un Pago",
+      content: "Para pagar a otro jugador o al banco: 1) Haz clic en el jugador de la lista, 2) Se abrirá un modal, 3) Ingresa el monto, 4) Confirma el pago. ¡Es así de simple!",
+      position: "top" as const,
+    },
+    {
+      id: "free-parking-player",
+      target: ".free-parking-card",
+      title: "Parada Libre",
+      content: "Parada Libre es un jugador especial que acumula dinero. Puedes pagarle y otros jugadores pueden cobrar de él. Su saldo siempre es visible.",
+      position: "top" as const,
+    },
+    {
+      id: "history-button",
+      target: "[data-tour='history-button']",
+      title: "Historial de Transacciones",
+      content: "Haz clic en este botón (📜) para ver el historial completo de todas las transacciones de la sala. Verás quién pagó a quién, cuánto y cuándo ocurrió cada transacción.",
+      position: "bottom" as const,
+    },
+    {
+      id: "action-bar",
+      target: ".action-bar",
+      title: "Barra de Acciones",
+      content: "Aquí encontrarás: historial (📜), cambio de tema (🌙/☀️), acciones de sala (🚪), y el tour guiado (📖).",
+      position: "bottom" as const,
+    },
+  ];
 
   // Cargar nombre de la sala
   useEffect(() => {
@@ -191,11 +251,63 @@ export default function MonopolyApp() {
   if (!roomId) {
     return (
       <div className="app-container">
-        <ActionBar roomId={null} currentPlayerId={currentPlayerId} onRoomExit={handleRoomExit} />
+        <ActionBar 
+          roomId={null} 
+          currentPlayerId={currentPlayerId} 
+          onRoomExit={handleRoomExit}
+          tourSteps={[
+            {
+              id: "welcome",
+              target: ".room-selector h2",
+              title: "¡Bienvenido a PICONOPOLY!",
+              content: "Este es el sistema de pagos en tiempo real para Monopoly. Aquí puedes crear o unirte a salas de juego.",
+              position: "bottom" as const,
+            },
+            {
+              id: "create-room",
+              target: "[data-tour='create-room']",
+              title: "Crear Nueva Sala",
+              content: "Haz clic aquí para crear una nueva sala de juego. Podrás configurar el nombre, contraseñas y el monto inicial para los jugadores.",
+              position: "bottom" as const,
+            },
+            {
+              id: "join-room",
+              target: "[data-tour='join-room']",
+              title: "Unirse a una Sala",
+              content: "Si alguien te compartió una URL o ID de sala, haz clic aquí para unirte. Necesitarás el ID y la contraseña de la sala.",
+              position: "bottom" as const,
+            },
+          ]}
+        />
         <div className="app-header">
           <h1>PICONOPOLY</h1>
         </div>
-        <RoomSelector onRoomSelected={handleRoomSelected} />
+        <RoomSelector 
+          onRoomSelected={handleRoomSelected}
+          tourSteps={[
+            {
+              id: "welcome",
+              target: ".room-selector h2",
+              title: "¡Bienvenido a PICONOPOLY!",
+              content: "Este es el sistema de pagos en tiempo real para Monopoly. Aquí puedes crear o unirte a salas de juego.",
+              position: "bottom" as const,
+            },
+            {
+              id: "create-room",
+              target: "[data-tour='create-room']",
+              title: "Crear Nueva Sala",
+              content: "Haz clic aquí para crear una nueva sala de juego. Podrás configurar el nombre, contraseñas y el monto inicial para los jugadores.",
+              position: "bottom" as const,
+            },
+            {
+              id: "join-room",
+              target: "[data-tour='join-room']",
+              title: "Unirse a una Sala",
+              content: "Si alguien te compartió una URL o ID de sala, haz clic aquí para unirte. Necesitarás el ID y la contraseña de la sala.",
+              position: "bottom" as const,
+            },
+          ]}
+        />
       </div>
     );
   }
@@ -204,7 +316,12 @@ export default function MonopolyApp() {
   if (!currentPlayerId || !currentPlayer) {
     return (
       <div className="app-container">
-        <ActionBar roomId={roomId} currentPlayerId={currentPlayerId} onRoomExit={handleRoomExit} />
+        <ActionBar 
+          roomId={roomId} 
+          currentPlayerId={currentPlayerId} 
+          onRoomExit={handleRoomExit}
+          tourSteps={gameTourSteps}
+        />
         <div className="app-header">
           <h1>PICONOPOLY</h1>
         </div>
@@ -216,9 +333,14 @@ export default function MonopolyApp() {
   return (
     <div className="app-container">
       <PaymentNotification currentPlayerId={currentPlayerId} roomId={roomId} />
-      <ActionBar roomId={roomId} onRoomExit={handleRoomExit} />
-      <div className="app-header">
-        <h1>PICONOPOLY</h1>
+      <ActionBar 
+        roomId={roomId} 
+        currentPlayerId={currentPlayerId}
+        onRoomExit={handleRoomExit}
+        tourSteps={gameTourSteps}
+      />
+        <div className="app-header">
+          <h1>PICONOPOLY</h1>
         {roomName && (
           <div style={{ textAlign: "center", marginBottom: "var(--spacing-sm)", fontSize: "0.875rem", color: "var(--text-light)" }}>
             Sala: {roomName}
@@ -247,7 +369,7 @@ export default function MonopolyApp() {
         <div className="current-player-info">
           <div className="player-name-display">{currentPlayer.name}</div>
           <div className="header-balance-section">
-            <div className="player-balance-display">
+            <div className="player-balance-display" data-tour="balance">
               ${currentPlayer.balance.toLocaleString()}
             </div>
             <BankPassButton currentPlayerId={currentPlayerId} roomId={roomId} />

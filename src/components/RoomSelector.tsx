@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { createRoom, verifyRoomPassword, getRoom } from "../lib/firebase";
 import { DEFAULT_INITIAL_BALANCE } from "../lib/gameConfig";
-import SuperAdminModal from "./SuperAdminModal";
+import TourGuide from "./TourGuide";
 
 interface RoomSelectorProps {
   onRoomSelected: (roomId: string) => void;
 }
 
-export default function RoomSelector({ onRoomSelected }: RoomSelectorProps) {
+export default function RoomSelector({ onRoomSelected, tourSteps }: RoomSelectorProps) {
   const [mode, setMode] = useState<"select" | "create" | "join">("select");
   const [roomName, setRoomName] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +16,31 @@ export default function RoomSelector({ onRoomSelected }: RoomSelectorProps) {
   const [roomId, setRoomId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showSuperAdmin, setShowSuperAdmin] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+
+  const homeTourSteps = [
+    {
+      id: "welcome",
+      target: ".room-selector h2",
+      title: "¡Bienvenido a PICONOPOLY!",
+      content: "Este es el sistema de pagos en tiempo real para Monopoly. Aquí puedes crear o unirte a salas de juego.",
+      position: "bottom" as const,
+    },
+    {
+      id: "create-room",
+      target: "[data-tour='create-room']",
+      title: "Crear Nueva Sala",
+      content: "Haz clic aquí para crear una nueva sala de juego. Podrás configurar el nombre, contraseñas y el monto inicial para los jugadores.",
+      position: "bottom" as const,
+    },
+    {
+      id: "join-room",
+      target: "[data-tour='join-room']",
+      title: "Unirse a una Sala",
+      content: "Si alguien te compartió una URL o ID de sala, haz clic aquí para unirte. Necesitarás el ID y la contraseña de la sala.",
+      position: "bottom" as const,
+    },
+  ];
 
   // Detectar si hay un ID de sala en la URL
   useEffect(() => {
@@ -257,42 +281,41 @@ export default function RoomSelector({ onRoomSelected }: RoomSelectorProps) {
   }
 
   return (
-    <div className="room-selector">
-      <h2>Seleccionar Sala</h2>
-      <p style={{ marginBottom: "var(--spacing-lg)", color: "var(--text-secondary)", textAlign: "center" }}>
-        Crea una nueva sala o únete a una existente
-      </p>
-      <div className="form-actions" style={{ flexDirection: "column", gap: "var(--spacing-md)" }}>
-        <button
-          type="button"
-          onClick={() => setMode("create")}
-          style={{ width: "100%" }}
-        >
-          Crear Nueva Sala
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("join")}
-          className="button-secondary"
-          style={{ width: "100%" }}
-        >
-          Unirse a una Sala
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowSuperAdmin(true)}
-          className="button-danger"
-          style={{ width: "100%", marginTop: "var(--spacing-lg)" }}
-          title="Super Admin - Eliminar todos los datos"
-        >
-          🔴 Super Admin
-        </button>
+    <>
+      <div className="room-selector">
+        <h2>Seleccionar Sala</h2>
+        <p style={{ marginBottom: "var(--spacing-lg)", color: "var(--text-secondary)", textAlign: "center" }}>
+          Crea una nueva sala o únete a una existente
+        </p>
+        <div className="form-actions" style={{ flexDirection: "column", gap: "var(--spacing-md)" }}>
+          <button
+            type="button"
+            onClick={() => setMode("create")}
+            style={{ width: "100%" }}
+            data-tour="create-room"
+          >
+            Crear Nueva Sala
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("join")}
+            className="button-secondary"
+            style={{ width: "100%" }}
+            data-tour="join-room"
+          >
+            Unirse a una Sala
+          </button>
+        </div>
       </div>
-      
-      {showSuperAdmin && (
-        <SuperAdminModal onClose={() => setShowSuperAdmin(false)} />
+
+      {tourSteps && tourSteps.length > 0 && (
+        <TourGuide
+          steps={tourSteps}
+          isActive={showTour}
+          onClose={() => setShowTour(false)}
+        />
       )}
-    </div>
+    </>
   );
 }
 
