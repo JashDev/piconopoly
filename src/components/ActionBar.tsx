@@ -8,6 +8,7 @@ interface ActionBarProps {
   roomId: string | null;
   currentPlayerId?: string | null;
   onRoomExit?: () => void;
+  isDemo?: boolean;
   tourSteps?: Array<{
     id: string;
     target: string;
@@ -17,7 +18,7 @@ interface ActionBarProps {
   }>;
 }
 
-export default function ActionBar({ roomId, currentPlayerId, onRoomExit, tourSteps }: ActionBarProps) {
+export default function ActionBar({ roomId, currentPlayerId, onRoomExit, isDemo = false, tourSteps }: ActionBarProps) {
   const [showHistory, setShowHistory] = useState(false);
   const [showRoomActions, setShowRoomActions] = useState(false);
   const [showTour, setShowTour] = useState(false);
@@ -63,7 +64,7 @@ export default function ActionBar({ roomId, currentPlayerId, onRoomExit, tourSte
       </div>
 
       {showHistory && roomId && (
-        <TransactionHistoryModal roomId={roomId} onClose={() => setShowHistory(false)} />
+        <TransactionHistoryModal roomId={roomId} onClose={() => setShowHistory(false)} isDemo={isDemo} />
       )}
 
       {showRoomActions && roomId && (

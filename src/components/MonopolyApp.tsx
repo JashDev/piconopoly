@@ -11,6 +11,8 @@ import RegisterForm from "./RegisterForm";
 import RoomSelector from "./RoomSelector";
 import TransactionModal from "./TransactionModal";
 import TourGuide from "./TourGuide";
+import DemoRoom from "./DemoRoom";
+import WelcomeTour from "./WelcomeTour";
 import { getRoom } from "../lib/firebase";
 
 export default function MonopolyApp() {
@@ -25,6 +27,7 @@ export default function MonopolyApp() {
   const [loading, setLoading] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<{ id: string | "BANK"; name: string } | null>(null);
+  const [showDemo, setShowDemo] = useState(false);
 
   const gameTourSteps = [
     {
@@ -95,6 +98,20 @@ export default function MonopolyApp() {
       });
     }
   }, [roomId]);
+
+  // Verificar si hay parámetro demo en la URL
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("demo") === "true" && !showDemo) {
+        setShowDemo(true);
+        // Limpiar el parámetro de la URL sin recargar
+        urlParams.delete("demo");
+        const newUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : "");
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, [showDemo]);
 
   const handleRoomSelected = (selectedRoomId: string) => {
     setRoomId(selectedRoomId);
@@ -247,6 +264,11 @@ export default function MonopolyApp() {
     );
   }
 
+  // Si se muestra la demo
+  if (showDemo) {
+    return <DemoRoom onClose={() => setShowDemo(false)} />;
+  }
+
   // Si no hay sala seleccionada, mostrar selector de salas
   if (!roomId) {
     return (
@@ -277,6 +299,13 @@ export default function MonopolyApp() {
               content: "Si alguien te compartió una URL o ID de sala, haz clic aquí para unirte. Necesitarás el ID y la contraseña de la sala.",
               position: "bottom" as const,
             },
+            {
+              id: "how-it-works",
+              target: "[data-tour='how-it-works']",
+              title: "¿Cómo Funciona?",
+              content: "Haz clic aquí para ver una demostración interactiva de cómo funciona el juego. Te llevará a una sala simulada con un tour guiado.",
+              position: "bottom" as const,
+            },
           ]}
         />
         <div className="app-header">
@@ -284,6 +313,7 @@ export default function MonopolyApp() {
         </div>
         <RoomSelector 
           onRoomSelected={handleRoomSelected}
+          onShowDemo={() => setShowDemo(true)}
           tourSteps={[
             {
               id: "welcome",
@@ -308,6 +338,7 @@ export default function MonopolyApp() {
             },
           ]}
         />
+        <WelcomeTour onClose={() => {}} />
       </div>
     );
   }
@@ -335,10 +366,11 @@ export default function MonopolyApp() {
       <PaymentNotification currentPlayerId={currentPlayerId} roomId={roomId} />
       <ActionBar 
         roomId={roomId} 
-        currentPlayerId={currentPlayerId}
+        currentPlayerId={currentPlayerId} 
         onRoomExit={handleRoomExit}
         tourSteps={gameTourSteps}
       />
+      <WelcomeTour onClose={() => {}} />
         <div className="app-header">
           <h1>PICONOPOLY</h1>
         {roomName && (

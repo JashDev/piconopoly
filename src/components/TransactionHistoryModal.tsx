@@ -13,9 +13,10 @@ interface TransactionWithNames extends Omit<Transaction, "fromPlayerId" | "toPla
 interface TransactionHistoryModalProps {
   roomId: string;
   onClose: () => void;
+  isDemo?: boolean;
 }
 
-export default function TransactionHistoryModal({ roomId, onClose }: TransactionHistoryModalProps) {
+export default function TransactionHistoryModal({ roomId, onClose, isDemo = false }: TransactionHistoryModalProps) {
   const [transactions, setTransactions] = useState<TransactionWithNames[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -102,7 +103,9 @@ export default function TransactionHistoryModal({ roomId, onClose }: Transaction
           {loading ? (
             <div className="loading">Cargando...</div>
           ) : transactions.length === 0 ? (
-            <div className="no-transactions">No hay transacciones aún</div>
+            <div className="no-transactions" style={{ textAlign: "center", padding: "var(--spacing-lg)", color: "var(--text-secondary)" }}>
+              {isDemo ? "Aquí se ven todos los movimientos para que Andres no haga trampa" : "No hay transacciones aún"}
+            </div>
           ) : (
             <div className="transactions-list">
               {transactions.map((transaction) => (

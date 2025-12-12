@@ -606,17 +606,6 @@ select {
   background: var(--primary-dark);
 }
 
-.reset-game-button {
-  width: 100%;
-  background: var(--danger-color);
-  color: white;
-  font-weight: 600;
-  border: none;
-}
-
-.reset-game-button:hover:not(:disabled) {
-  background: #e53e3e;
-}
 
 .button-secondary {
   background: var(--card-bg);
@@ -660,13 +649,11 @@ select {
 }
 
 /* Formularios especiales */
-.bank-pass-form,
-.reset-game-form {
+.bank-pass-form {
   width: 100%;
 }
 
-.bank-pass-form h3,
-.reset-game-form h3 {
+.bank-pass-form h3 {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: var(--spacing-md);
@@ -940,6 +927,26 @@ select {
 
 .tour-tooltip {
   animation: slideIn 0.3s ease;
+}
+
+/* Mejoras para móviles en el tour */
+@media (max-width: 480px) {
+  .tour-tooltip {
+    font-size: 0.875rem;
+  }
+  
+  .tour-tooltip button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .tour-tooltip h3 {
+    font-size: 1rem !important;
+  }
+  
+  .tour-tooltip p {
+    font-size: 0.8125rem !important;
+  }
 }
 
 @keyframes fadeIn {

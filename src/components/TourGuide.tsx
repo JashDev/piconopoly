@@ -17,8 +17,19 @@ interface TourGuideProps {
 export default function TourGuide({ steps, isActive, onClose }: TourGuideProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+
+  // Detectar si es móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 480);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     if (!isActive || steps.length === 0) {
@@ -140,7 +151,10 @@ export default function TourGuide({ steps, isActive, onClose }: TourGuideProps) 
     const pos = getElementPosition(element);
     const position = step.position || "bottom";
 
-    const isMobile = window.innerWidth < 480;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const tooltipWidth = isMobile ? Math.min(viewportWidth * 0.9, 320) : 320;
+    const tooltipHeight = 200; // Estimación aproximada
     
     switch (position) {
       case "top":
@@ -185,12 +199,32 @@ export default function TourGuide({ steps, isActive, onClose }: TourGuideProps) 
         break;
     }
 
-    // Ajustar para móviles - forzar posición bottom o top
+    // Ajustar para móviles - forzar posición bottom o top y asegurar visibilidad
     if (isMobile && position !== "center") {
       if (position === "left" || position === "right") {
         tooltipStyle.top = `${pos.top + pos.height + 10}px`;
         tooltipStyle.left = `${pos.left + pos.width / 2}px`;
         tooltipStyle.transform = "translateX(-50%)";
+      }
+      
+      // Asegurar que el tooltip no se salga de la pantalla horizontalmente
+      const tooltipLeft = parseFloat(tooltipStyle.left as string);
+      const tooltipLeftPx = typeof tooltipStyle.left === "string" && tooltipStyle.left.includes("px") 
+        ? parseFloat(tooltipStyle.left) 
+        : (tooltipLeft + (pos.width / 2));
+      
+      if (tooltipLeftPx - tooltipWidth / 2 < 10) {
+        tooltipStyle.left = `${tooltipWidth / 2 + 10}px`;
+      } else if (tooltipLeftPx + tooltipWidth / 2 > viewportWidth - 10) {
+        tooltipStyle.left = `${viewportWidth - tooltipWidth / 2 - 10}px`;
+      }
+      
+      // Asegurar que el tooltip no se salga de la pantalla verticalmente
+      const tooltipTop = parseFloat(tooltipStyle.top as string);
+      if (tooltipTop < 10) {
+        tooltipStyle.top = "10px";
+      } else if (tooltipTop + tooltipHeight > viewportHeight - 10) {
+        tooltipStyle.top = `${viewportHeight - tooltipHeight - 10}px`;
       }
     }
   }
@@ -247,31 +281,66 @@ export default function TourGuide({ steps, isActive, onClose }: TourGuideProps) 
             backgroundColor: "var(--card-bg)",
             border: "2px solid var(--accent-color)",
             borderRadius: "12px",
-            padding: "var(--spacing-md)",
+            padding: isMobile ? "var(--spacing-md) var(--spacing-sm)" : "var(--spacing-md)",
             zIndex: 10000,
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
             color: "var(--text-color)",
+            width: isMobile ? "calc(90vw - 20px)" : "auto",
+            maxWidth: isMobile ? "calc(90vw - 20px)" : tooltipStyle.maxWidth,
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ marginBottom: "var(--spacing-sm)" }}>
-            <h3 style={{ margin: 0, marginBottom: "var(--spacing-xs)", fontSize: "1.125rem", fontWeight: "600" }}>
+            <h3 style={{ 
+              margin: 0, 
+              marginBottom: "var(--spacing-xs)", 
+              fontSize: isMobile ? "1rem" : "1.125rem", 
+              fontWeight: "600",
+              lineHeight: "1.3"
+            }}>
               {step.title}
             </h3>
-            <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+            <p style={{ 
+              margin: 0, 
+              fontSize: isMobile ? "0.8125rem" : "0.875rem", 
+              color: "var(--text-secondary)", 
+              lineHeight: "1.5" 
+            }}>
               {step.content}
             </p>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "var(--spacing-md)" }}>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-light)" }}>
+          <div style={{ 
+            display: "flex", 
+            flexDirection: isMobile ? "column" : "row",
+            justifyContent: "space-between", 
+            alignItems: isMobile ? "stretch" : "center", 
+            marginTop: "var(--spacing-md)",
+            gap: isMobile ? "var(--spacing-xs)" : "0"
+          }}>
+            <div style={{ 
+              fontSize: "0.75rem", 
+              color: "var(--text-light)",
+              textAlign: isMobile ? "center" : "left",
+              marginBottom: isMobile ? "var(--spacing-xs)" : "0"
+            }}>
               {currentStep + 1} / {steps.length}
             </div>
-            <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
+            <div style={{ 
+              display: "flex", 
+              gap: "var(--spacing-xs)",
+              flexDirection: isMobile ? "column" : "row",
+              width: isMobile ? "100%" : "auto"
+            }}>
               {currentStep > 0 && (
                 <button
                   onClick={handlePrevious}
                   className="button-secondary"
-                  style={{ fontSize: "0.875rem", padding: "var(--spacing-xs) var(--spacing-sm)" }}
+                  style={{ 
+                    fontSize: "0.875rem", 
+                    padding: isMobile ? "var(--spacing-sm) var(--spacing-md)" : "var(--spacing-xs) var(--spacing-sm)",
+                    minHeight: isMobile ? "44px" : "auto",
+                    flex: isMobile ? "1" : "none"
+                  }}
                 >
                   ← Anterior
                 </button>
@@ -279,13 +348,23 @@ export default function TourGuide({ steps, isActive, onClose }: TourGuideProps) 
               <button
                 onClick={handleSkip}
                 className="button-secondary"
-                style={{ fontSize: "0.875rem", padding: "var(--spacing-xs) var(--spacing-sm)" }}
+                style={{ 
+                  fontSize: "0.875rem", 
+                  padding: isMobile ? "var(--spacing-sm) var(--spacing-md)" : "var(--spacing-xs) var(--spacing-sm)",
+                  minHeight: isMobile ? "44px" : "auto",
+                  flex: isMobile ? "1" : "none"
+                }}
               >
                 Saltar
               </button>
               <button
                 onClick={handleNext}
-                style={{ fontSize: "0.875rem", padding: "var(--spacing-xs) var(--spacing-sm)" }}
+                style={{ 
+                  fontSize: "0.875rem", 
+                  padding: isMobile ? "var(--spacing-sm) var(--spacing-md)" : "var(--spacing-xs) var(--spacing-sm)",
+                  minHeight: isMobile ? "44px" : "auto",
+                  flex: isMobile ? "1" : "none"
+                }}
               >
                 {currentStep === steps.length - 1 ? "Finalizar" : "Siguiente →"}
               </button>

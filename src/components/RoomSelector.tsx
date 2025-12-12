@@ -7,7 +7,7 @@ interface RoomSelectorProps {
   onRoomSelected: (roomId: string) => void;
 }
 
-export default function RoomSelector({ onRoomSelected, tourSteps }: RoomSelectorProps) {
+export default function RoomSelector({ onRoomSelected, onShowDemo, tourSteps }: RoomSelectorProps) {
   const [mode, setMode] = useState<"select" | "create" | "join">("select");
   const [roomName, setRoomName] = useState("");
   const [password, setPassword] = useState("");
@@ -305,6 +305,33 @@ export default function RoomSelector({ onRoomSelected, tourSteps }: RoomSelector
           >
             Unirse a una Sala
           </button>
+          {onShowDemo && (
+            <>
+              <button
+                type="button"
+                onClick={onShowDemo}
+                className="button-secondary"
+                style={{ width: "100%", marginTop: "var(--spacing-md)", backgroundColor: "var(--accent-color)", color: "white" }}
+                data-tour="how-it-works"
+              >
+                📚 ¿Cómo Funciona?
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("demo", "true");
+                  navigator.clipboard.writeText(url.toString());
+                  alert("✅ Link del demo copiado. Compártelo para que otros vean cómo funciona.");
+                }}
+                className="button-secondary"
+                style={{ width: "100%", marginTop: "var(--spacing-xs)", fontSize: "0.875rem" }}
+                title="Copiar link del demo"
+              >
+                📋 Copiar Link del Demo
+              </button>
+            </>
+          )}
         </div>
       </div>
 
