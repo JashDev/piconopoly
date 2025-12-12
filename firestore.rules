@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reglas para jugadores
+    match /players/{playerId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['name', 'balance', 'createdAt']) &&
+                      request.resource.data.name is string &&
+                      request.resource.data.balance is number;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance']);
+      allow delete: if true;
+    }
+    
+    // Reglas para transacciones
+    match /transactions/{transactionId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['fromPlayerId', 'toPlayerId', 'amount', 'type', 'timestamp']) &&
+                      (request.resource.data.fromPlayerId is string || request.resource.data.fromPlayerId == "BANK") &&
+                      (request.resource.data.toPlayerId is string || request.resource.data.toPlayerId == "BANK") &&
+                      request.resource.data.amount is number &&
+                      request.resource.data.amount > 0;
+      allow delete: if true;
+    }
+    
+        // Reglas para configuración del juego
+        match /gameConfig/{configId} {
+          allow read: if true;
+          allow create: if true; // Permitir crear configuración
+          allow update: if true; // Permitir actualizar configuración (para cambiar el monto inicial)
+          allow delete: if true; // Permitir eliminar para la función de reset
+        }
+    
+    // Reglas para solicitudes de "Cobrar Vuelta de Banco"
+    match /bankPassRequests/{requestId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['requestedBy', 'requestedByName', 'amount', 'status', 'confirmations', 'rejections', 'createdAt']) &&
+                      request.resource.data.requestedBy is string &&
+                      request.resource.data.requestedByName is string &&
+                      request.resource.data.amount is number &&
+                      request.resource.data.amount > 0 &&
+                      request.resource.data.status == "pending" &&
+                      request.resource.data.confirmations is list &&
+                      request.resource.data.rejections is list;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'confirmations', 'rejections', 'resolvedAt']);
+      allow delete: if true;
+    }
+  }
+}
+
