@@ -29,8 +29,8 @@ export default function ResetGameButton() {
     setLoading(true);
     try {
       await resetGame();
-      // Limpiar localStorage del jugador actual
-      localStorage.removeItem("playerId");
+      // Limpiar sessionStorage del jugador actual
+      sessionStorage.removeItem("playerId");
       // Recargar la página
       window.location.reload();
     } catch (err) {

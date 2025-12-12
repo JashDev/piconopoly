@@ -200,7 +200,7 @@ body {
 .header-balance-section {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -245,6 +245,27 @@ body {
   font-size: 1.5rem;
   line-height: 1;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.free-parking-card-button {
+  background: var(--success-color);
+}
+
+.free-parking-card-button:hover {
+  background: #38a169;
+}
+
+.player-card.free-parking-card {
+  border: 2px solid var(--success-color);
+  background: var(--card-bg);
+}
+
+.player-card.free-parking-card .player-balance {
+  display: block !important;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--success-color);
+  margin-top: var(--spacing-xs);
 }
 
 /* Secciones */

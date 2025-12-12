@@ -2,10 +2,11 @@ import { useState } from "react";
 import { createPlayer } from "../lib/firebase";
 
 interface RegisterFormProps {
+  roomId: string;
   onRegister: (playerId: string) => void;
 }
 
-export default function RegisterForm({ onRegister }: RegisterFormProps) {
+export default function RegisterForm({ roomId, onRegister }: RegisterFormProps) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +22,7 @@ export default function RegisterForm({ onRegister }: RegisterFormProps) {
 
     setLoading(true);
     try {
-      const playerId = await createPlayer(name.trim());
+      const playerId = await createPlayer(name.trim(), roomId);
       onRegister(playerId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrar jugador");

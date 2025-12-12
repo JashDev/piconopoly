@@ -3,10 +3,12 @@ import { processBankPass } from "../lib/firebase";
 
 interface BankPassButtonProps {
   currentPlayerId: string;
+  roomId: string;
 }
 
 export default function BankPassButton({
   currentPlayerId,
+  roomId,
 }: BankPassButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState<string>("");
@@ -25,7 +27,7 @@ export default function BankPassButton({
 
     setLoading(true);
     try {
-      await processBankPass(currentPlayerId, amountNum);
+      await processBankPass(currentPlayerId, amountNum, roomId);
       setAmount("");
       setShowModal(false);
       setError(null);

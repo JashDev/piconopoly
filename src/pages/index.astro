@@ -13,7 +13,7 @@ import "../styles/global.css";
     <script>
       // Aplicar tema antes de que se renderice la página para evitar flash
       (function() {
-        const savedTheme = localStorage.getItem("theme");
+        const savedTheme = sessionStorage.getItem("theme");
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         const shouldBeDark = savedTheme === "dark" || (!savedTheme && prefersDark);
         if (shouldBeDark) {
@@ -25,6 +25,6 @@ import "../styles/global.css";
     </script>
   </head>
   <body>
-    <MonopolyApp client:load />
+    <MonopolyApp client:only="react" />
   </body>
 </html>

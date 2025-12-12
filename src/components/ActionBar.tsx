@@ -1,38 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ThemeToggle from "./ThemeToggle";
 import TransactionHistoryModal from "./TransactionHistoryModal";
-import AdminModal from "./AdminModal";
+import RoomActionsModal from "./RoomActionsModal";
 
-export default function ActionBar() {
+interface ActionBarProps {
+  roomId: string | null;
+  currentPlayerId?: string | null;
+  onRoomExit?: () => void;
+}
+
+export default function ActionBar({ roomId, currentPlayerId, onRoomExit }: ActionBarProps) {
   const [showHistory, setShowHistory] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
+  const [showRoomActions, setShowRoomActions] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <>
       <div className="action-bar">
         <button
-          onClick={() => setShowHistory(true)}
+          onClick={isClient && roomId ? () => setShowHistory(true) : undefined}
           className="action-button"
           title="Ver historial"
+          disabled={!isClient || !roomId}
         >
           📜
         </button>
         <ThemeToggle />
         <button
-          onClick={() => setShowAdmin(true)}
+          onClick={isClient && roomId ? () => setShowRoomActions(true) : undefined}
           className="action-button"
-          title="Administración"
+          title="Acciones de sala"
+          disabled={!isClient || !roomId}
         >
-          ⚙️
+          🚪
         </button>
       </div>
 
-      {showHistory && (
-        <TransactionHistoryModal onClose={() => setShowHistory(false)} />
+      {showHistory && roomId && (
+        <TransactionHistoryModal roomId={roomId} onClose={() => setShowHistory(false)} />
       )}
 
-      {showAdmin && (
-        <AdminModal onClose={() => setShowAdmin(false)} />
+      {showRoomActions && roomId && (
+        <RoomActionsModal 
+          roomId={roomId}
+          currentPlayerId={currentPlayerId}
+          onClose={() => setShowRoomActions(false)}
+          onRoomExit={onRoomExit}
+        />
       )}
     </>
   );

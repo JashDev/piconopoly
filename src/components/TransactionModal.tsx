@@ -6,6 +6,7 @@ interface TransactionModalProps {
   currentPlayerBalance: number;
   recipientId: string | "BANK";
   recipientName: string;
+  roomId: string;
   onClose: () => void;
 }
 
@@ -14,6 +15,7 @@ export default function TransactionModal({
   currentPlayerBalance,
   recipientId,
   recipientName,
+  roomId,
   onClose,
 }: TransactionModalProps) {
   const [amount, setAmount] = useState<string>("");
@@ -37,7 +39,7 @@ export default function TransactionModal({
 
     setLoading(true);
     try {
-      await createTransaction(currentPlayerId, recipientId, amountNum);
+      await createTransaction(currentPlayerId, recipientId, amountNum, roomId);
       setAmount("");
       setError(null);
       onClose();

@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
-import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db, getPlayer } from "../lib/firebase";
 import type { Transaction } from "../lib/types";
 
 interface PaymentNotificationProps {
   currentPlayerId: string;
+  roomId: string;
 }
 
 interface Notification {
@@ -13,38 +14,73 @@ interface Notification {
   amount: number;
 }
 
-export default function PaymentNotification({ currentPlayerId }: PaymentNotificationProps) {
+export default function PaymentNotification({ currentPlayerId, roomId }: PaymentNotificationProps) {
   const [notification, setNotification] = useState<Notification | null>(null);
   const seenTransactionIdsRef = useRef<Set<string>>(new Set());
   const confettiCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const connectionTimeRef = useRef<Date>(new Date());
 
   useEffect(() => {
-    if (!currentPlayerId) return;
+    if (!currentPlayerId || !roomId) return;
 
-    // Resetear las transacciones vistas cuando cambia el jugador
-    seenTransactionIdsRef.current = new Set();
+    // Guardar el tiempo de conexión para solo mostrar transacciones nuevas
+    connectionTimeRef.current = new Date();
+    
+    // Cargar transacciones vistas desde sessionStorage
+    const savedSeen = sessionStorage.getItem(`seenTransactions_${currentPlayerId}_${roomId}`);
+    if (savedSeen) {
+      try {
+        const seenArray = JSON.parse(savedSeen);
+        seenTransactionIdsRef.current = new Set(seenArray);
+      } catch (e) {
+        seenTransactionIdsRef.current = new Set();
+      }
+    } else {
+      seenTransactionIdsRef.current = new Set();
+    }
 
     const transactionsRef = collection(db, "transactions");
-    const q = query(transactionsRef, orderBy("timestamp", "desc"), limit(10));
+    // Query sin orderBy para evitar necesidad de índice compuesto, ordenamos en memoria
+    const q = query(transactionsRef, where("roomId", "==", roomId));
 
     const unsubscribe = onSnapshot(q, async (snapshot) => {
-      for (const docSnap of snapshot.docs) {
-        const transactionId = docSnap.id;
-        
+      // Convertir a array y ordenar por timestamp descendente en memoria
+      const transactions = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          transaction: {
+            id: docSnap.id,
+            fromPlayerId: data.fromPlayerId,
+            toPlayerId: data.toPlayerId,
+            amount: data.amount,
+            type: data.type,
+            roomId: data.roomId,
+            timestamp: data.timestamp?.toDate() || new Date(),
+          } as Transaction,
+        };
+      });
+
+      // Ordenar por timestamp descendente (más recientes primero)
+      transactions.sort((a, b) => b.transaction.timestamp.getTime() - a.transaction.timestamp.getTime());
+
+      // Procesar solo las 10 más recientes
+      for (const { id: transactionId, transaction } of transactions.slice(0, 10)) {
         // Si ya vimos esta transacción, saltarla
         if (seenTransactionIdsRef.current.has(transactionId)) {
           continue;
         }
 
-        const data = docSnap.data();
-        const transaction: Transaction = {
-          id: transactionId,
-          fromPlayerId: data.fromPlayerId,
-          toPlayerId: data.toPlayerId,
-          amount: data.amount,
-          type: data.type,
-          timestamp: data.timestamp?.toDate() || new Date(),
-        };
+        // Solo procesar transacciones que ocurrieron DESPUÉS de la conexión
+        // (con un margen de 2 segundos para evitar problemas de sincronización)
+        const transactionTime = transaction.timestamp.getTime();
+        const connectionTime = connectionTimeRef.current.getTime() - 2000; // 2 segundos de margen
+        
+        if (transactionTime < connectionTime) {
+          // Esta transacción es antigua, marcarla como vista sin mostrar notificación
+          seenTransactionIdsRef.current.add(transactionId);
+          continue;
+        }
 
         // Solo mostrar notificación si el jugador actual es el destinatario
         // y no es del banco (ya que el banco tiene su propio flujo)
@@ -65,6 +101,10 @@ export default function PaymentNotification({ currentPlayerId }: PaymentNotifica
 
           // Marcar como vista
           seenTransactionIdsRef.current.add(transactionId);
+          
+          // Guardar en sessionStorage
+          const seenArray = Array.from(seenTransactionIdsRef.current);
+          sessionStorage.setItem(`seenTransactions_${currentPlayerId}_${roomId}`, JSON.stringify(seenArray));
 
           // Lanzar confetti
           triggerConfetti();
@@ -76,12 +116,18 @@ export default function PaymentNotification({ currentPlayerId }: PaymentNotifica
         } else {
           // Marcar como vista aunque no sea para este jugador
           seenTransactionIdsRef.current.add(transactionId);
+          
+          // Guardar en sessionStorage
+          const seenArray = Array.from(seenTransactionIdsRef.current);
+          sessionStorage.setItem(`seenTransactions_${currentPlayerId}_${roomId}`, JSON.stringify(seenArray));
         }
       }
+    }, (error) => {
+      console.error("Error en PaymentNotification query:", error);
     });
 
     return () => unsubscribe();
-  }, [currentPlayerId]);
+  }, [currentPlayerId, roomId]);
 
   const triggerConfetti = () => {
     // Limpiar canvas anterior si existe

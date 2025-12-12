@@ -8,7 +8,7 @@ export default function ThemeToggle() {
   // Establecer el tema después de la hidratación
   useEffect(() => {
     setMounted(true);
-    const savedTheme = localStorage.getItem("theme");
+    const savedTheme = sessionStorage.getItem("theme");
     let shouldBeDark = false;
     
     if (savedTheme === "dark") {
@@ -38,11 +38,11 @@ export default function ThemeToggle() {
     if (isDark) {
       document.documentElement.classList.add("dark-mode");
       document.documentElement.classList.remove("light-mode");
-      localStorage.setItem("theme", "dark");
+      sessionStorage.setItem("theme", "dark");
     } else {
       document.documentElement.classList.add("light-mode");
       document.documentElement.classList.remove("dark-mode");
-      localStorage.setItem("theme", "light");
+      sessionStorage.setItem("theme", "light");
     }
   }, [isDark, mounted]);
 

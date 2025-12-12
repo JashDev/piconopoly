@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db, getPlayer } from "../lib/firebase";
 import type { Transaction, Player } from "../lib/types";
 
@@ -11,16 +11,20 @@ interface TransactionWithNames extends Omit<Transaction, "fromPlayerId" | "toPla
 }
 
 interface TransactionHistoryModalProps {
+  roomId: string;
   onClose: () => void;
 }
 
-export default function TransactionHistoryModal({ onClose }: TransactionHistoryModalProps) {
+export default function TransactionHistoryModal({ roomId, onClose }: TransactionHistoryModalProps) {
   const [transactions, setTransactions] = useState<TransactionWithNames[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!roomId) return;
+    
     const transactionsRef = collection(db, "transactions");
-    const q = query(transactionsRef, orderBy("timestamp", "desc"), limit(50));
+    // Query sin orderBy para evitar necesidad de índice compuesto, ordenamos en memoria
+    const q = query(transactionsRef, where("roomId", "==", roomId));
     
     const unsubscribe = onSnapshot(q, async (snapshot) => {
       const transactionsData: TransactionWithNames[] = [];
@@ -51,20 +55,29 @@ export default function TransactionHistoryModal({ onClose }: TransactionHistoryM
             toPlayerId: data.toPlayerId,
             amount: data.amount,
             type: data.type,
+            roomId: data.roomId,
             timestamp: data.timestamp?.toDate() || new Date(),
             fromName,
             toName,
           });
         }
-        setTransactions(transactionsData);
+        
+        // Ordenar por timestamp descendente en memoria y limitar a 50
+        transactionsData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        const limitedTransactions = transactionsData.slice(0, 50);
+        
+        setTransactions(limitedTransactions);
         setLoading(false);
       };
 
       processTransactions();
+    }, (error) => {
+      console.error("Error en TransactionHistoryModal query:", error);
+      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [roomId]);
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("es-ES", {

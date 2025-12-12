@@ -1,47 +1,67 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Reglas para salas
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['name', 'passwordHash', 'adminPasswordHash', 'createdBy', 'createdAt']) &&
+                      request.resource.data.name is string &&
+                      request.resource.data.passwordHash is string &&
+                      request.resource.data.adminPasswordHash is string &&
+                      request.resource.data.createdBy is string;
+      allow update: if false; // No se permiten actualizaciones
+      allow delete: if true; // Permitir eliminar para limpieza
+    }
+    
     // Reglas para jugadores
     match /players/{playerId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['name', 'balance', 'createdAt']) &&
+      allow create: if request.resource.data.keys().hasAll(['name', 'balance', 'roomId', 'createdAt']) &&
                       request.resource.data.name is string &&
-                      request.resource.data.balance is number;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance']);
+                      request.resource.data.balance is number &&
+                      request.resource.data.roomId is string;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance']) &&
+                      request.resource.data.roomId == resource.data.roomId;
       allow delete: if true;
     }
     
     // Reglas para transacciones
     match /transactions/{transactionId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['fromPlayerId', 'toPlayerId', 'amount', 'type', 'timestamp']) &&
+      allow create: if request.resource.data.keys().hasAll(['fromPlayerId', 'toPlayerId', 'amount', 'type', 'roomId', 'timestamp']) &&
                       (request.resource.data.fromPlayerId is string || request.resource.data.fromPlayerId == "BANK") &&
                       (request.resource.data.toPlayerId is string || request.resource.data.toPlayerId == "BANK") &&
                       request.resource.data.amount is number &&
-                      request.resource.data.amount > 0;
+                      request.resource.data.amount > 0 &&
+                      request.resource.data.roomId is string;
       allow delete: if true;
     }
     
-        // Reglas para configuración del juego
-        match /gameConfig/{configId} {
-          allow read: if true;
-          allow create: if true; // Permitir crear configuración
-          allow update: if true; // Permitir actualizar configuración (para cambiar el monto inicial)
-          allow delete: if true; // Permitir eliminar para la función de reset
-        }
+    // Reglas para configuración del juego
+    match /gameConfig/{configId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['initialBalance', 'roomId']) &&
+                      request.resource.data.initialBalance is number &&
+                      request.resource.data.roomId is string;
+      allow update: if request.resource.data.roomId == resource.data.roomId &&
+                      request.resource.data.initialBalance is number;
+      allow delete: if true;
+    }
     
     // Reglas para solicitudes de "Cobrar Vuelta de Banco"
     match /bankPassRequests/{requestId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['requestedBy', 'requestedByName', 'amount', 'status', 'confirmations', 'rejections', 'createdAt']) &&
+      allow create: if request.resource.data.keys().hasAll(['requestedBy', 'requestedByName', 'amount', 'status', 'confirmations', 'rejections', 'roomId', 'createdAt']) &&
                       request.resource.data.requestedBy is string &&
                       request.resource.data.requestedByName is string &&
                       request.resource.data.amount is number &&
                       request.resource.data.amount > 0 &&
                       request.resource.data.status == "pending" &&
                       request.resource.data.confirmations is list &&
-                      request.resource.data.rejections is list;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'confirmations', 'rejections', 'resolvedAt']);
+                      request.resource.data.rejections is list &&
+                      request.resource.data.roomId is string;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'confirmations', 'rejections', 'resolvedAt']) &&
+                      request.resource.data.roomId == resource.data.roomId;
       allow delete: if true;
     }
   }
