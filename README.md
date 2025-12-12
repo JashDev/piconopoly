@@ -112,6 +112,43 @@ Para crear una build de producción:
 npm run build
 ```
 
+## 🚀 Deploy en Vercel
+
+### Configuración para Vercel
+
+1. **Instalar dependencias** (ya incluido en el proyecto):
+   ```bash
+   npm install
+   ```
+
+2. **Configurar variables de entorno en Vercel**:
+   - Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
+   - Settings > Environment Variables
+   - Agrega todas las variables de `env.example`:
+     - `PUBLIC_FIREBASE_API_KEY`
+     - `PUBLIC_FIREBASE_AUTH_DOMAIN`
+     - `PUBLIC_FIREBASE_PROJECT_ID`
+     - `PUBLIC_FIREBASE_STORAGE_BUCKET`
+     - `PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+     - `PUBLIC_FIREBASE_APP_ID`
+
+3. **Deploy automático**:
+   - Conecta tu repositorio de GitHub/GitLab/Bitbucket a Vercel
+   - Vercel detectará automáticamente que es un proyecto Astro
+   - El deploy se ejecutará automáticamente en cada push
+
+4. **Deploy manual**:
+   ```bash
+   npm install -g vercel
+   vercel
+   ```
+
+### Notas importantes:
+- El proyecto está configurado como **static site** (SSG)
+- Todas las variables de entorno deben tener el prefijo `PUBLIC_` para estar disponibles en el cliente
+- Asegúrate de configurar las reglas de Firestore antes del deploy
+- El adaptador de Vercel está configurado en `astro.config.mjs`
+
 Para previsualizar la build:
 
 ```bash

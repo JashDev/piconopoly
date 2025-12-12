@@ -23,9 +23,9 @@ const firebaseConfig = {
 };
 
 // Validar que todas las variables de entorno estén configuradas
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+if (typeof window !== "undefined" && (!firebaseConfig.apiKey || !firebaseConfig.projectId)) {
   console.error("❌ Error: Las variables de entorno de Firebase no están configuradas.");
-  console.error("Por favor, crea un archivo .env con las credenciales de Firebase.");
+  console.error("Por favor, configura las variables de entorno en Vercel o crea un archivo .env");
   console.error("Puedes usar env.example como referencia.");
 }
 

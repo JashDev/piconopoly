@@ -9,17 +9,21 @@ import "../styles/global.css";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="generator" content={Astro.generator} />
-    <title>Monopoly - Sistema de Pagos</title>
-    <script>
+    <meta name="description" content="Sistema de pagos en tiempo real para Monopoly - PICONOPOLY" />
+    <meta name="theme-color" content="#4a5568" />
+    <title>PICONOPOLY - Sistema de Pagos</title>
+    <script is:inline>
       // Aplicar tema antes de que se renderice la página para evitar flash
       (function() {
-        const savedTheme = sessionStorage.getItem("theme");
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const shouldBeDark = savedTheme === "dark" || (!savedTheme && prefersDark);
-        if (shouldBeDark) {
-          document.documentElement.classList.add("dark-mode");
-        } else {
-          document.documentElement.classList.add("light-mode");
+        if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+          const savedTheme = sessionStorage.getItem("theme");
+          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const shouldBeDark = savedTheme === "dark" || (!savedTheme && prefersDark);
+          if (shouldBeDark) {
+            document.documentElement.classList.add("dark-mode");
+          } else {
+            document.documentElement.classList.add("light-mode");
+          }
         }
       })();
     </script>
